@@ -1,0 +1,3 @@
+package Config
+
+var Tocken = ""
