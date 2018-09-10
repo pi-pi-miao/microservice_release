@@ -111,14 +111,6 @@ func RegisterEmail(w http.ResponseWriter, r *http.Request) {
 			Response.SendErrorResponse(w, Err.ErrorNotRequest)
 			return
 		} else {
-			if verification.SendEmailTime.Unix()-emailVerific.(Verification).SendEmailTime.Unix() > int64(3*60*time.Second) {
-				Response.SendErrorResponse(w, Err.ErrorTimeOut)
-				return
-			}
-			if verification.Code != emailVerific.(Verification).Code {
-				Response.SendErrorResponse(w, Err.ErrorRequestFaild)
-				return
-			}
 
 			Register, err := rpc.Dial("tcp", "127.0.0.1:8080")
 			if err != nil {
@@ -129,16 +121,28 @@ func RegisterEmail(w http.ResponseWriter, r *http.Request) {
 			suss.Ver = true
 			suss.username = verification.Username
 			var in bool
-			reply := Register.Go("U.Register", suss, in, nil)
 
-			resp := "邮箱验证成功"
-			Response.NormalResponse(w, resp, 200)
+			if verification.SendEmailTime.Unix()-emailVerific.(Verification).SendEmailTime.Unix() > int64(3*60*time.Second) {
+				suss.Ver = false
+			}
+			if verification.Code != emailVerific.(Verification).Code {
+				Response.SendErrorResponse(w, Err.ErrorRequestFaild)
+				return
+			}
+
+			reply := Register.Go("U.Register", suss, in, nil)
 
 			if _, ok := <-reply.Done; !ok && !in {
 				EmailIn <- false
 				log.Printf("insert User:%s Db err err:%s", verification.Username, err)
 			}
-
+			if !in {
+				Response.SendErrorResponse(w, Err.ErrorTimeOut)
+				return
+			} else {
+				resp := "邮箱验证成功"
+				Response.NormalResponse(w, resp, 200)
+			}
 		}
 	} else {
 		Response.SendErrorResponse(w, Err.ErrorNotRequest)

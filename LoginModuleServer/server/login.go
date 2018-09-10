@@ -27,6 +27,7 @@ func (p *LoginUser) SelectUser(email string) (users *Users, err error) {
 func (p *LoginUser) InsertUser(lastlogin time.Time) error {
 	sql := "insert into user(lastlogin) values(?)"
 	_, err := Db.Exec(sql, lastlogin)
+	defer Db.Close()
 	if err != nil {
 		log.Warn("update user lastlogin err", err)
 		return err
