@@ -24,7 +24,6 @@ var (
 			ErrorCode: "003",
 		},
 	}
-
 	ErrorPasswordNotSame = ErrorResponse{
 		HttpCode: 409,
 		Error: Err{
@@ -72,7 +71,6 @@ var (
 			ErrorCode: "009",
 		},
 	}
-
 	ErrorNotRequest = ErrorResponse{
 		HttpCode: 403,
 		Error: Err{

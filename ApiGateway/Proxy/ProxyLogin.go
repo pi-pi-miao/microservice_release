@@ -1,8 +1,11 @@
 package Proxy
 
 import (
+	"ApiGateway/Config"
 	"ApiGateway/Err"
 	"ApiGateway/Response"
+	"ApiGateway/initialize"
+	"ApiGateway/server"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
@@ -53,7 +56,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if user.Email != "" && user.Password != "" {
-			login, err := rpc.Dial("tcp", "127.0.0.1:8080")
+			addr, err := server.Balance(initialize.EtcdBalance.Values[0], initialize.Etcd.Values)
+			if err != nil {
+				logs.Error("apigateway balance err:%v", err)
+				return
+			}
+
+			login, err := rpc.Dial(Config.Conn, addr)
 			if err != nil {
 				Response.SendErrorResponse(w, Err.ErrorRpcConnFailed)
 				return

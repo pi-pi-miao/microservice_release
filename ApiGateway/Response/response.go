@@ -3,7 +3,7 @@ package Response
 import (
 	"net/http"
 	"ApiGateway/Err"
-	"github.com/gin-gonic/gin/json"
+	"encoding/json"
 	"io"
 )
 

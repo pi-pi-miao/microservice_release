@@ -1,6 +1,7 @@
 package login
 
 import (
+	"LoginModuleServer/config"
 	"LoginModuleServer/controller"
 	"net"
 	"net/rpc"
@@ -9,7 +10,7 @@ import (
 func Start() {
 	rect := new(controller.U)
 	rpc.Register(rect)
-	tcpaddr, err := net.ResolveTCPAddr("tcp4", "127.0.0.1:8080")
+	tcpaddr, err := net.ResolveTCPAddr(config.Conn, config.ServiceAddr)
 	controller.ChkError(err)
 	tcplisten, err2 := net.ListenTCP("tcp", tcpaddr)
 	controller.ChkError(err2)

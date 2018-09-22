@@ -1,9 +1,10 @@
 package main
 
 import (
-	"LoginModuleServer/init"
 	"LoginModuleServer/login"
 	"fmt"
+	//"LoginModuleServer/init"
+	"LoginModuleServer/init"
 )
 
 func main() {

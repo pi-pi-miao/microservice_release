@@ -31,19 +31,18 @@ func PutEtcdKey(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//把前端写的服务的ip和端口读取到etcd中
 		var strBuf bytes.Buffer
 		strBuf.WriteString(etcdbody.Ip)
 		strBuf.WriteString(":")
 		strBuf.WriteString(etcdbody.Port)
 		etcdvalue := strBuf.Bytes()
+
 		_, err = Initialize.EtcdClient.Put(ctx, etcdbody.Key, string(etcdvalue))
 		if err != nil {
 			logs.Warn("put etcd key:%v value:%v err:%v", etcdbody.Key, etcdvalue, err)
 			ResponseErr(w, Err.ErrorPutEtcd)
 			return
 		}
-
 		etcdvalues := new(server.EtcdValues)
 		etcdvalues.Value = string(etcdvalue)
 		etcdvalues.Description = etcdbody.Description

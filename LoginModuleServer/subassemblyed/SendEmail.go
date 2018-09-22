@@ -2,7 +2,7 @@ package subassemblyed
 
 import (
 	"bytes"
-	"github.com/astaxie/beego/logs"
+	"log"
 	"net/smtp"
 	"strings"
 	"time"
@@ -29,7 +29,7 @@ type Email struct {
 func SendEmail(ContentBody string, TAddress string, TName string, SuValue string, args ...string) time.Time {
 	UserEmail := "571500549@qq.com"
 	Mail_Smtp_Port := ":25"
-	Mail_Password := "qrgykefttqambbbe"
+	Mail_Password := "qrgykefttqamb"
 	Mail_Smtp_Host := "smtp.qq.com"
 	auth := smtp.PlainAuth("", UserEmail, Mail_Password, Mail_Smtp_Host)
 	to := []string{TAddress}
@@ -54,7 +54,7 @@ func SendEmail(ContentBody string, TAddress string, TName string, SuValue string
 	msg := buf.Bytes()
 	err := smtp.SendMail(Mail_Smtp_Host+Mail_Smtp_Port, auth, user, to, msg)
 	if err != nil {
-		logs.Warn("send mail error: %v", err)
+		log.Printf("send mail error: %v", err)
 	}
 	now := time.Now()
 	return now

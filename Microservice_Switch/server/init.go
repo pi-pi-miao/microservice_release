@@ -2,10 +2,10 @@ package server
 
 import "github.com/jmoiron/sqlx"
 
-var(
+var (
 	Db *sqlx.DB
 )
 
-func Init(db *sqlx.DB){
+func Init(db *sqlx.DB) {
 	Db = db
 }

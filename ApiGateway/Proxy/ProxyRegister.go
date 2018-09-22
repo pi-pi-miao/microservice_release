@@ -1,11 +1,14 @@
 package Proxy
 
 import (
+	"ApiGateway/Config"
 	"ApiGateway/Err"
 	"ApiGateway/Response"
+	"ApiGateway/initialize"
+	"ApiGateway/server"
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/gommon/log"
+	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -32,11 +35,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		user := getUser()
+		//user.
+
 		err = json.Unmarshal([]byte(body), user)
 		if err != nil {
 			Response.SendErrorResponse(w, Err.ErrorJsonFailed)
 			return
 		}
+
 		fmt.Println(now)
 
 		if user.Password1 != "" {
@@ -72,7 +78,12 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		Register, err := rpc.Dial("tcp", "127.0.0.1:8080")
+		addr, err := server.Balance(initialize.EtcdBalance.Values[0], initialize.Etcd.Values)
+		if err != nil {
+			logs.Error("apigateway balance err:%v", err)
+			return
+		}
+		Register, err := rpc.Dial(Config.Conn, addr)
 		if err != nil {
 			Response.SendErrorResponse(w, Err.ErrorRpcConnFailed)
 			return
@@ -112,10 +123,15 @@ func RegisterEmail(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 
-			Register, err := rpc.Dial("tcp", "127.0.0.1:8080")
+			addr, err := server.Balance(initialize.EtcdBalance.Values[0], initialize.Etcd.Values)
+			if err != nil {
+				logs.Error("apigateway balance err:%v", err)
+				return
+			}
+			Register, err := rpc.Dial(Config.Conn, addr)
 			if err != nil {
 				DailChan <- false
-				log.Printf("Dial err:%s", err)
+				logs.Error("Dial err:%s", err)
 			}
 			suss := new(Signed)
 			suss.Ver = true
@@ -134,7 +150,7 @@ func RegisterEmail(w http.ResponseWriter, r *http.Request) {
 
 			if _, ok := <-reply.Done; !ok && !in {
 				EmailIn <- false
-				log.Printf("insert User:%s Db err err:%s", verification.Username, err)
+				logs.Error("insert User:%s Db err err:%s", verification.Username, err)
 			}
 			if !in {
 				Response.SendErrorResponse(w, Err.ErrorTimeOut)
@@ -143,6 +159,7 @@ func RegisterEmail(w http.ResponseWriter, r *http.Request) {
 				resp := "邮箱验证成功"
 				Response.NormalResponse(w, resp, 200)
 			}
+
 		}
 	} else {
 		Response.SendErrorResponse(w, Err.ErrorNotRequest)
@@ -154,14 +171,14 @@ func RegisterDete(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		for i := range DailChan {
 			if !i {
-				//TODO
+				//...
 			} else {
 				break
 			}
 		}
 		for k := range EmailIn {
 			if !k {
-				//TODO
+				//...
 			} else {
 				break
 			}

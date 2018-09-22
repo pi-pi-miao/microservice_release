@@ -1,16 +1,15 @@
 package controller
 
 import (
-	"sync"
 	"LoginModuleServer/config"
-	"time"
-	"k8s.io/apimachinery/pkg/util/rand"
-	"LoginModuleServer/subassemblyed"
-	"strconv"
-	"LoginModuleServer/server"
 	"LoginModuleServer/init"
+	"LoginModuleServer/server"
+	"LoginModuleServer/subassemblyed"
+	"k8s.io/apimachinery/pkg/util/rand"
+	"strconv"
+	"sync"
+	"time"
 )
-
 
 func init() {
 	config.EmailCache = &sync.Map{}
@@ -30,8 +29,8 @@ func (p *U) Register(r UserRegister, ret *Verifiation) {
 
 func (p *U) UpdateUser(r Signed, ret *bool) {
 	if !r.Ver {
-		config.EmailCache.Delete(r.username)
 		*ret = false
+		config.EmailCache.Delete(r.username)
 		return
 	}
 	if UserRegister, ok := config.EmailCache.Load(r.username); !ok {
@@ -40,8 +39,8 @@ func (p *U) UpdateUser(r Signed, ret *bool) {
 	} else {
 		var user server.UserRegisterd
 		user.Username = UserRegister.(UserRegister).Username
-		user.Password1 = subassemblyed.Md5([]byte(UserRegister.(UserRegister).Password1+init.Salts.Salt))
-		user.Password2 = subassemblyed.Md5([]byte(UserRegister.(UserRegister).Password2+init.Salts.Salt))
+		user.Password1 = subassemblyed.Md5([]byte(UserRegister.(UserRegister).Password1 + init.Salts.Salt))
+		user.Password2 = subassemblyed.Md5([]byte(UserRegister.(UserRegister).Password2 + init.Salts.Salt))
 		user.Sex = UserRegister.(UserRegister).Sex
 		user.Email = UserRegister.(UserRegister).Email
 		user.LastLogin = UserRegister.(UserRegister).LastLogin
