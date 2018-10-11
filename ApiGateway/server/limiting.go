@@ -3,11 +3,13 @@ package server
 import (
 	"ApiGateway/Config"
 	"github.com/astaxie/beego/logs"
+	"sync"
 )
 
 var (
-	UserMap = make(map[int][]Fn)
-	IpMap   = make(map[string][]Fn)
+	userMap = &sync.Map{}
+	ipMap   = &sync.Map{}
+	fn      FnSlice
 )
 
 type UserLimit struct {
@@ -21,6 +23,8 @@ type IpLimit struct {
 }
 
 type Fn func(nowTime int64) (currentCount int)
+
+type FnSlice []Fn
 
 func (p *UserLimit) Sec(nowTime int64) (currentCount int) {
 	if p.currentTime != nowTime {
@@ -76,27 +80,31 @@ func (p *IpLimit) Min(nowTime int64) (currentCount int) {
 
 func UserRegister(id int) {
 	userlimit := new(UserLimit)
-	fn := UserMap[id]
-	fn = append(fn, userlimit.Sec)
-	fn = append(fn, userlimit.Min)
-	UserMap[id] = fn
+	userMap.Store(id, fn)
+	f, _ := userMap.Load(id)
+	fnslice := f.(FnSlice)
+	fnslice = append(fnslice, userlimit.Sec)
+	fnslice = append(fnslice, userlimit.Min)
+	userMap.Store(id, fnslice)
 }
 
 func IpRegister(ip string) {
 	iplimit := new(IpLimit)
-	fn := IpMap[ip]
-	fn = append(fn, iplimit.Sec)
-	fn = append(fn, iplimit.Min)
-	IpMap[ip] = fn
+	ipMap.Store(ip, fn)
+	f, _ := ipMap.Load(ip)
+	fnslice := f.(FnSlice)
+	fnslice = append(fnslice, iplimit.Sec)
+	fnslice = append(fnslice, iplimit.Min)
+	ipMap.Store(ip, fnslice)
 }
 
 func UserCall(id int, param int64) bool {
-	limit, ok := UserMap[id]
+	limit, ok := userMap.Load(id)
 	if !ok {
 		UserRegister(id)
 	}
-	secUserCount := limit[0](param)
-	minUserCount := limit[1](param)
+	secUserCount := limit.(FnSlice)[0](param)
+	minUserCount := limit.(FnSlice)[1](param)
 	if secUserCount > Config.User_sec_acc {
 		logs.Warn("this user%v a second visit %v", id, secUserCount)
 		return false
@@ -109,12 +117,12 @@ func UserCall(id int, param int64) bool {
 }
 
 func IpCall(ip string, param int64) bool {
-	limit, ok := IpMap[ip]
+	limit, ok := ipMap.Load(ip)
 	if !ok {
 		IpRegister(ip)
 	}
-	secIpCount := limit[0](param)
-	minIpCount := limit[1](param)
+	secIpCount := limit.(FnSlice)[0](param)
+	minIpCount := limit.(FnSlice)[1](param)
 	if secIpCount > Config.Ip_sec_acc {
 		logs.Warn("this Ip %v a second visit %v", ip, secIpCount)
 		return false
